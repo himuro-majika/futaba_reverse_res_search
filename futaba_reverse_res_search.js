@@ -399,7 +399,7 @@
     let latestStoredComment = commentHistoryList[commentHistoryList.length - 1].comment;
     let hitres;
     mutations.forEach(mutation => {
-      if (mutation.addedNodes.length && mutation.addedNodes[0].tagName == "TABLE") {
+      if (mutation.addedNodes.length && mutation.addedNodes[0].querySelector(".rtd")) {
         let table = mutation.addedNodes[0];
         let bq = table.querySelector("blockquote");
         if (!bq) return;
