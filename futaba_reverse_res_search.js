@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         futaba reverse res search
 // @namespace    https://github.com/himuro-majika
-// @version      1.0
+// @version      1.0.1
 // @description  被引用レスをポップアップ表示・自分の書き込みへのレスを通知しちゃう
 // @author       himuro_majika
 // @license      MIT
