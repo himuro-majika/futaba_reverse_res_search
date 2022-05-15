@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         futaba reverse res search
 // @namespace    https://github.com/himuro-majika
-// @version      1.0
+// @version      1.0.1
 // @description  被引用レスをポップアップ表示・自分の書き込みへのレスを通知しちゃう
 // @author       himuro_majika
 // @license      MIT
@@ -104,7 +104,7 @@
   }
 
   function _searchQtSrc(qt, qtnum, bqs) {
-    let qtText = qt.innerText.substr(1);
+    let qtText = qt.innerText.substr(1).trim();
     let qtsrcnum = "0";
 
     // レスナンバー(No.)
@@ -128,8 +128,14 @@
 
     // レス本文
     if (qtText.substr(0,1) == ">") return qtsrcnum;
-    for (let i = 0; i < bqs.length; i++) {
-      let t = bqs[i].textContent;
+    const qtresnum = parseInt(qt.parentNode.parentNode.querySelector(".rsc").textContent);
+    for (let i = qtresnum - 1; i > 0; i--) {
+      let t = "";
+      bqs[i].childNodes.forEach(node => {
+        if (node.nodeName == "#text") {
+          t += node.textContent;
+        }
+      });
       if (t.indexOf(qtText) >= 0) {
         qtsrcnum = getResNoFromTdChild(bqs[i].parentNode);
         if (qtsrcnum == qtnum) qtsrcnum = "0";
@@ -399,7 +405,7 @@
     let latestStoredComment = commentHistoryList[commentHistoryList.length - 1].comment;
     let hitres;
     mutations.forEach(mutation => {
-      if (mutation.addedNodes.length && mutation.addedNodes[0].tagName == "TABLE") {
+      if (mutation.addedNodes.length && mutation.addedNodes[0].querySelector(".rtd")) {
         let table = mutation.addedNodes[0];
         let bq = table.querySelector("blockquote");
         if (!bq) return;
