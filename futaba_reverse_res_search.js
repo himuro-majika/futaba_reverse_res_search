@@ -104,7 +104,7 @@
   }
 
   function _searchQtSrc(qt, qtnum, bqs) {
-    let qtText = qt.innerText.substr(1);
+    let qtText = qt.innerText.substr(1).trim();
     let qtsrcnum = "0";
 
     // レスナンバー(No.)
@@ -128,8 +128,14 @@
 
     // レス本文
     if (qtText.substr(0,1) == ">") return qtsrcnum;
-    for (let i = 0; i < bqs.length; i++) {
-      let t = bqs[i].textContent;
+    const qtresnum = parseInt(qt.parentNode.parentNode.querySelector(".rsc").textContent);
+    for (let i = qtresnum - 1; i > 0; i--) {
+      let t = "";
+      bqs[i].childNodes.forEach(node => {
+        if (node.nodeName == "#text") {
+          t += node.textContent;
+        }
+      });
       if (t.indexOf(qtText) >= 0) {
         qtsrcnum = getResNoFromTdChild(bqs[i].parentNode);
         if (qtsrcnum == qtnum) qtsrcnum = "0";
