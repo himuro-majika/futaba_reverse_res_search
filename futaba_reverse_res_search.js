@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         futaba reverse res search
 // @namespace    https://github.com/himuro-majika
-// @version      1.0.1
+// @version      1.0.2
 // @description  被引用レスをポップアップ表示・自分の書き込みへのレスを通知しちゃう
 // @author       himuro_majika
 // @license      MIT
@@ -31,24 +31,35 @@
   let url;
   let isPosted = false;
   let commentHistoryList;
+  const startTime = new Date().getTime(); //count parsing time
   init();
 
   function init() {
-    const startTime = new Date().getTime(); //count parsing time
     url = getUrl();
+    checkLoading();
     makeSelfCommentPicker();
-    setTimeout(() => {
-      searchSelfComment();
-      searchQuotedRes();
-      addCounter();
-      console.log(script_title + ' - Parsing: ' + ((new Date()).getTime() - startTime) + 'msec'); //log parsing time
-    }, 100);
     observeInserted();
     setOnSubmitEvent();
   }
 
+  function initParse() {
+    searchSelfComment();
+    searchQuotedRes();
+    addCounter();
+    console.log(script_title + ' - Parsing: ' + ((new Date()).getTime() - startTime) + 'msec'); //log parsing time
+  }
+
   function getUrl() {
     return location.href.match(/^.+:\/\/(.+)/)[1];
+  }
+
+  function checkLoading() {
+    let loadingTimer = setInterval(() => {
+      if (!document.getElementById("futakuro-loading")) {
+        initParse();
+        clearInterval(loadingTimer);
+      }      
+    }, 100)
   }
 
   function getThreImgSrc() {
@@ -176,8 +187,9 @@
   // 被引用レスのポップアップ
   function popupQuoteRes(e) {
     if (!this.closest("." + script_title + "_popup")) {
-      removePopup();
+      removePopupAll();
     }
+    clearTimeout(popupCloseTimer);
     clearTimeout(popupOpenTimer);
     popupOpenTimer = setTimeout(() => {
       let srcnum = this.getAttribute(script_title + "_num");
@@ -198,7 +210,7 @@
 
       resListContainer.appendChild(resListTable);
         document.querySelector("div.thre").appendChild(resListContainer);
-    }, 300);
+    }, 200);
   }
 
   function setPopupContent(resnolist) {
@@ -225,7 +237,7 @@
       const counter = td.querySelector("." + script_title + "_Counter");
       if (counter) {
         counter.addEventListener("mouseenter", popupQuoteRes);
-        counter.addEventListener("mouseleave", removePopup)
+        counter.addEventListener("mouseleave", removePopup);
       }
 
       const futakuro_resno = td.querySelector(".res_no");
@@ -269,15 +281,40 @@
     return container;
   }
 
-  function removePopup() {
+  function removePopup(souceEl) {
+    clearTimeout(popupCloseTimer);
     clearTimeout(popupOpenTimer);
+    if (!souceEl) return;
+    if (!souceEl.relatedTarget) return;
+    if (souceEl.srcElement.className == "GM_FRRS_Counter" && 
+      souceEl.relatedTarget.closest(".GM_FRRS_popup")) return;
+    if (souceEl.srcElement.classList.contains("GM_FRRS_popup") && 
+      souceEl.relatedTarget.closest(".GM_FRRS_popup")) {
+      removeForwardPopupSibling(souceEl.relatedTarget.closest(".GM_FRRS_popup"));
+      return;
+    }
     popupCloseTimer = setTimeout(() => {
-      let popup = document.querySelectorAll("." + script_title + "_popup");
-      if (!popup) return;
-        popup.forEach(p => {
-        p.remove();
-      })
-    }, 250);
+      removePopupAll();
+    }, 500);
+  }
+
+  function removePopupAll() {
+    let popup = document.querySelectorAll("." + script_title + "_popup");
+    if (!popup) return;
+    popup.forEach(p => {
+      p.remove();
+    })
+  }
+
+  function removeForwardPopupSibling(ele) {
+    if (!ele.nextElementSibling) return;
+    let nextsibling = ele.nextElementSibling;
+    if (nextsibling.classList.contains("GM_FRRS_popup")) {
+      nextsibling.remove();
+    } else {
+      return;
+    }
+    removeForwardPopupSibling(ele);
   }
 
   // 続きを読むで挿入される要素を監視
