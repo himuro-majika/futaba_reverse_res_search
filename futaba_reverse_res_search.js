@@ -31,24 +31,35 @@
   let url;
   let isPosted = false;
   let commentHistoryList;
+  const startTime = new Date().getTime(); //count parsing time
   init();
 
   function init() {
-    const startTime = new Date().getTime(); //count parsing time
     url = getUrl();
+    checkLoading();
     makeSelfCommentPicker();
-    setTimeout(() => {
-      searchSelfComment();
-      searchQuotedRes();
-      addCounter();
-      console.log(script_title + ' - Parsing: ' + ((new Date()).getTime() - startTime) + 'msec'); //log parsing time
-    }, 100);
     observeInserted();
     setOnSubmitEvent();
   }
 
+  function initParse() {
+    searchSelfComment();
+    searchQuotedRes();
+    addCounter();
+    console.log(script_title + ' - Parsing: ' + ((new Date()).getTime() - startTime) + 'msec'); //log parsing time
+  }
+
   function getUrl() {
     return location.href.match(/^.+:\/\/(.+)/)[1];
+  }
+
+  function checkLoading() {
+    let loadingTimer = setInterval(() => {
+      if (!document.getElementById("futakuro-loading")) {
+        initParse();
+        clearInterval(loadingTimer);
+      }      
+    }, 100)
   }
 
   function getThreImgSrc() {
