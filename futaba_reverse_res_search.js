@@ -364,7 +364,7 @@
   function onCommentSend() {
     if (isPosted) return;
     isPosted = true;
-    let textbody = document.getElementById("ftxa").value.trim();
+    let textbody = document.getElementById("ftxa").value.split("\n").map(e => e.trim()).join("\n");
     storeCommentHistory(textbody);
   }
 
